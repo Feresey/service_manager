@@ -8,6 +8,8 @@ import (
 	"regexp"
 )
 
+type ServiceName string
+
 type MessageType int
 
 const (
@@ -33,7 +35,7 @@ const (
 )
 
 type Service struct {
-	Name    string
+	Name    ServiceName
 	Args    []string
 	Command string
 	State   State
@@ -47,7 +49,7 @@ type Service struct {
 	cmd           *exec.Cmd
 }
 
-func NewService(Name, Command string, Args []string, runningTemplate *regexp.Regexp) *Service {
+func NewService(Name ServiceName, Command string, Args []string, runningTemplate *regexp.Regexp) *Service {
 	return &Service{
 		Name:          Name,
 		Command:       Command,
