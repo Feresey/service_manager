@@ -34,6 +34,8 @@ const (
 	StateFailed
 )
 
+var execCommand = exec.CommandContext
+
 type Service struct {
 	Name    ServiceName
 	Args    []string
@@ -66,9 +68,10 @@ func (s *Service) Start(ctx context.Context) chan ServiceMessage {
 	s.ctx = ctx
 	s.cancel = cancel
 
-	s.cmd = exec.CommandContext(ctx, s.Command, s.Args...)
+	s.cmd = execCommand(ctx, s.Command, s.Args...)
 	stdout, err := s.cmd.StdoutPipe()
-	s.channel = make(chan ServiceMessage, 1) // we should handle one error that can occur during initialization
+	s.channel = make(chan ServiceMessage, 3) // we should handle one error that can occur during initialization and started and running messages
+	s.setStarted()
 	if err != nil {
 		s.setFailed(err)
 		return s.channel
@@ -78,7 +81,6 @@ func (s *Service) Start(ctx context.Context) chan ServiceMessage {
 		return s.channel
 	}
 	s.output = stdout
-	s.setStarted()
 
 	go s.poll()
 	return s.channel
@@ -101,14 +103,17 @@ func (s *Service) setFailed(err error) {
 }
 
 func (s *Service) setStarted() {
-	if s.runningRegexp == nil {
-		s.State = StateRunning
-		return
-	}
 	s.State = StateStarted
 	s.channel <- ServiceMessage{
 		Type:  MessageState,
 		State: StateStarted,
+	}
+	if s.runningRegexp == nil {
+		s.State = StateRunning
+		s.channel <- ServiceMessage{
+			Type:  MessageState,
+			State: StateRunning,
+		}
 	}
 }
 
@@ -154,4 +159,8 @@ func (s *Service) poll() {
 		return
 	}
 	s.setFinished()
+}
+
+func isStartedState(s State) bool {
+	return s == StateStarted || s == StateRunning
 }
