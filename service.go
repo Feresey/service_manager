@@ -88,10 +88,10 @@ func (s *Service) Start(ctx context.Context) chan ServiceMessage {
 }
 
 func (s *Service) Stop() {
-	if s.State == StateStarted || s.State == StateRunning {
-		s.cmd.Process.Signal(os.Interrupt)
-		//s.cancel()
-	}
+	//if s.State == StateStarted || s.State == StateRunning {
+	s.cmd.Process.Signal(os.Interrupt)
+	//s.cancel()
+	//}
 }
 
 func (s *Service) setFailed(err error) {

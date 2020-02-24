@@ -81,23 +81,33 @@ func (sm *ServiceManager) Stop(name ServiceName) {
 }
 
 func (sm *ServiceManager) Close() {
-	// TODO:
-	// Wait when pollDone closed
+	sm.stopAll <- struct{}{}
+	<-sm.pollDone
+	/*
+		for _, ch := range sm.outputChannels {
+			close(ch)
+		}
+	*/
+	close(sm.pollDone)
+	close(sm.stateChannel)
+	close(sm.stopAll)
+	close(sm.taskChannel)
 }
 
 func (sm *ServiceManager) poll() {
 	tasks := []TaskMessage{}
+loop:
 	for {
 		select {
 		case task := <-sm.taskChannel:
 			switch task.Task {
 			case TaskStart:
 				if isStartedState(sm.states[task.Name]) {
-					continue
+					continue loop
 				}
 			case TaskStop:
 				if !isStartedState(sm.states[task.Name]) {
-					continue
+					continue loop
 				}
 			}
 
@@ -115,13 +125,38 @@ func (sm *ServiceManager) poll() {
 }
 
 func (sm *ServiceManager) stopAllServices() {
-	// todo sort running services by dependencies and stop them in order
+	serviceToStop := GetOrphanedStartedServices(sm.states, sm.requirements)
+	if len(serviceToStop) == 0 {
+		return
+	}
+	toStop := make(map[ServiceName]struct{})
+	for _, name := range serviceToStop {
+		toStop[name] = struct{}{}
+		sm.stopService(name)
+	}
+loop:
+	for {
+		select {
+		case <-sm.taskChannel:
+			continue loop
+		case state := <-sm.stateChannel:
+			sm.states[state.Name] = state.State
+			if !isStartedState(state.State) {
+				delete(toStop, state.Name)
+			}
+
+		}
+		for name, _ := range toStop {
+			sm.stopService(name)
+		}
+		if len(toStop) == 0 {
+			return
+		}
+	}
+
 }
 
 func (sm *ServiceManager) applyFirstTask(tasks []TaskMessage) []TaskMessage {
-	// todo: apply stop service
-
-	// apply start service
 	if len(tasks) == 0 {
 		return tasks
 	}
