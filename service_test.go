@@ -211,7 +211,7 @@ func TestServiceStop(t *testing.T) {
 			close(messages)
 		}
 		if message.Type == MessageState && message.State == StateRunning {
-			time.Sleep(time.Millisecond * 100)
+			//time.Sleep(time.Millisecond * 100)
 			service.Stop()
 		}
 		recorded = append(recorded, message)

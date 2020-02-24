@@ -5,6 +5,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -212,48 +213,36 @@ func TestServiceManagerStartWithFullfilledDependency(t *testing.T) {
 	m.Close()
 }
 
-/*
 func TestServiceManagerStop(t *testing.T) {
 	defer setHelperCommand(t)()
 
 	m := NewServiceManager()
 	defer m.Close()
 
-	serviceMessages := m.Register("TEST", "service", []string{"sleep", "10000"}, nil, []ServiceName{})
-	recorded := []ServiceMessage{}
-	expected := []ServiceMessage{
-		ServiceMessage{
-			Type:  MessageState,
-			State: StateStarted,
-		},
-		ServiceMessage{
-			Type:  MessageState,
-			State: StateRunning,
-		},
-		ServiceMessage{
-			Type:  MessageState,
-			State: StateFinished,
-		},
-	}
+	startTemplate := regexp.MustCompile("ready")
+	serviceMessages := m.Register("TEST", "service", []string{"lines", "ready", "sleep", "5000"}, startTemplate, []ServiceName{})
+	m.Start("TEST")
 
-	m.Start("TEST")
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+loop:
 	for {
-		message := <-serviceMessages
-		recorded = append(recorded, message)
-		if message.Type == MessageState && !isStartedState(message.State) {
-			break
+		select {
+		case <-ticker.C:
+			t.Error("Service wasn't stopped after second")
+			break loop
+		case message := <-serviceMessages:
+			if message.Type == MessageState && message.State == StateRunning {
+				m.Stop("TEST")
+
+			}
+			if message.Type == MessageState && message.State == StateFailed {
+				t.Error("Service wasn't stopped gracefully")
+				break loop
+			}
+			if message.Type == MessageState && message.State == StateFinished {
+				break loop
+			}
 		}
 	}
-	assert.Equal(t, expected, recorded)
-	recorded = recorded[:0]
-	m.Start("TEST")
-	for {
-		message := <-serviceMessages
-		recorded = append(recorded, message)
-		if message.Type == MessageState && !isStartedState(message.State) {
-			break
-		}
-	}
-	assert.Equal(t, expected, recorded)
 }
-*/

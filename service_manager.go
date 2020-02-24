@@ -90,9 +90,17 @@ func (sm *ServiceManager) poll() {
 	for {
 		select {
 		case task := <-sm.taskChannel:
-			if isStartedState(sm.states[task.Name]) == true {
-				continue
+			switch task.Task {
+			case TaskStart:
+				if isStartedState(sm.states[task.Name]) {
+					continue
+				}
+			case TaskStop:
+				if !isStartedState(sm.states[task.Name]) {
+					continue
+				}
 			}
+
 			tasks = append(tasks, task)
 		case state := <-sm.stateChannel:
 			sm.states[state.Name] = state.State
@@ -161,17 +169,15 @@ func (sm *ServiceManager) startService(name ServiceName) bool {
 
 func (sm *ServiceManager) stopService(name ServiceName) bool {
 	for _, requirement := range sm.requirements[name] {
-		if sm.startService(requirement) == false {
+		if sm.stopService(requirement) == false {
 			return false
 		}
 	}
-	if sm.states[name] == StateRunning {
+	if !isStartedState(sm.states[name]) {
 		return true
 	}
-	if !isStartedState(sm.states[name]) {
-		serviceChan := sm.services[name].Start(nil)
-		sm.states[name] = StateStarted
-		go servicePoll(name, serviceChan, sm.outputChannels[name], sm.stateChannel)
+	if isStartedState(sm.states[name]) {
+		sm.services[name].Stop()
 	}
 	return false
 }
