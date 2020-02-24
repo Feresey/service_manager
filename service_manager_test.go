@@ -3,6 +3,7 @@ package main
 import (
 	"regexp"
 	"sync"
+	"sync/atomic"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -110,16 +111,14 @@ func TestServiceManagerStartWithDependency(t *testing.T) {
 	defer close(bMessages)
 
 	wg := &sync.WaitGroup{}
-	mu := &sync.Mutex{}
-	isAStarted := false
+	aStarts := int64(0)
 
 	wg.Add(1)
 	go func() {
 		for m := range aMessages {
 			if m.Type == MessageState && m.State == StateRunning {
-				mu.Lock()
-				isAStarted = true
-				mu.Unlock()
+				atomic.AddInt64(&aStarts, 1)
+
 			}
 			if m.Type == MessageState && !isStartedState(m.State) {
 				break
@@ -133,10 +132,7 @@ func TestServiceManagerStartWithDependency(t *testing.T) {
 	for message := range bMessages {
 		recorded = append(recorded, message)
 		if message.Type == MessageState && message.State == StateStarted {
-			mu.Lock()
-			dependencyFulfilled := isAStarted
-			mu.Unlock()
-			if dependencyFulfilled == false {
+			if atomic.LoadInt64(&aStarts) != 1 {
 				t.Error("B started before A!")
 			}
 		}
@@ -169,17 +165,14 @@ func TestServiceManagerStartWithFullfilledDependency(t *testing.T) {
 	bMessages := m.Register("B", "service", []string{}, nil, []ServiceName{"A"})
 
 	wg := &sync.WaitGroup{}
-	mu := &sync.Mutex{}
-	aStarts := 0
+	aStarts := int64(0)
 
 	m.Start("A")
 	wg.Add(1)
 	go func() {
 		for m := range aMessages {
 			if m.Type == MessageState && m.State == StateRunning {
-				mu.Lock()
-				aStarts++
-				mu.Unlock()
+				atomic.AddInt64(&aStarts, 1)
 				wg.Done()
 			}
 			if m.Type == MessageState && !isStartedState(m.State) {
@@ -194,10 +187,7 @@ func TestServiceManagerStartWithFullfilledDependency(t *testing.T) {
 	for message := range bMessages {
 		recorded = append(recorded, message)
 		if message.Type == MessageState && message.State == StateStarted {
-			mu.Lock()
-			dependencyStartedOnce := aStarts == 1
-			mu.Unlock()
-			if dependencyStartedOnce == false {
+			if atomic.LoadInt64(&aStarts) != 1 {
 				t.Error("B started more than once!")
 			}
 		}
@@ -221,3 +211,49 @@ func TestServiceManagerStartWithFullfilledDependency(t *testing.T) {
 	}, recorded)
 	m.Close()
 }
+
+/*
+func TestServiceManagerStop(t *testing.T) {
+	defer setHelperCommand(t)()
+
+	m := NewServiceManager()
+	defer m.Close()
+
+	serviceMessages := m.Register("TEST", "service", []string{"sleep", "10000"}, nil, []ServiceName{})
+	recorded := []ServiceMessage{}
+	expected := []ServiceMessage{
+		ServiceMessage{
+			Type:  MessageState,
+			State: StateStarted,
+		},
+		ServiceMessage{
+			Type:  MessageState,
+			State: StateRunning,
+		},
+		ServiceMessage{
+			Type:  MessageState,
+			State: StateFinished,
+		},
+	}
+
+	m.Start("TEST")
+	for {
+		message := <-serviceMessages
+		recorded = append(recorded, message)
+		if message.Type == MessageState && !isStartedState(message.State) {
+			break
+		}
+	}
+	assert.Equal(t, expected, recorded)
+	recorded = recorded[:0]
+	m.Start("TEST")
+	for {
+		message := <-serviceMessages
+		recorded = append(recorded, message)
+		if message.Type == MessageState && !isStartedState(message.State) {
+			break
+		}
+	}
+	assert.Equal(t, expected, recorded)
+}
+*/

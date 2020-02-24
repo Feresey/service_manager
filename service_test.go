@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/signal"
 	"regexp"
 	"strconv"
 	"strings"
@@ -73,6 +74,13 @@ func TestHelperService(t *testing.T) {
 	if os.Getenv("GO_WANT_HELPER_PROCESS") != "1" {
 		return
 	}
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	go func() {
+		for range c {
+			os.Exit(0)
+		}
+	}()
 	args := os.Args
 	for len(args) > 0 {
 		if args[0] == "--" {
@@ -208,10 +216,6 @@ func TestServiceStop(t *testing.T) {
 		}
 		recorded = append(recorded, message)
 	}
-	if len(recorded) == 0 {
-		t.Fatal("Recordered zero messages from service")
-	}
-	recorded[len(recorded)-1].Value = ""
 	assert.Equal(t, []ServiceMessage{
 		ServiceMessage{
 			Type:  0,
@@ -227,7 +231,7 @@ func TestServiceStop(t *testing.T) {
 		},
 		ServiceMessage{
 			Type:  0,
-			State: StateFailed,
+			State: StateFinished,
 		},
 	}, recorded)
 }

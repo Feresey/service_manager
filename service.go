@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"io"
+	"os"
 	"os/exec"
 	"regexp"
 )
@@ -88,7 +89,8 @@ func (s *Service) Start(ctx context.Context) chan ServiceMessage {
 
 func (s *Service) Stop() {
 	if s.State == StateStarted || s.State == StateRunning {
-		s.cancel()
+		s.cmd.Process.Signal(os.Interrupt)
+		//s.cancel()
 	}
 }
 
