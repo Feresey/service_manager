@@ -9,8 +9,6 @@ import (
 	"regexp"
 )
 
-type ServiceName string
-
 type MessageType int
 
 const (
@@ -20,6 +18,7 @@ const (
 )
 
 type ServiceMessage struct {
+	Name  string
 	Type  MessageType
 	State State
 	Value string
@@ -38,7 +37,7 @@ const (
 var execCommand = exec.CommandContext
 
 type Service struct {
-	Name    ServiceName
+	Name    string
 	Args    []string
 	Command string
 	State   State
@@ -52,7 +51,7 @@ type Service struct {
 	cmd           *exec.Cmd
 }
 
-func NewService(Name ServiceName, Command string, Args []string, runningTemplate *regexp.Regexp) *Service {
+func NewService(Name string, Command string, Args []string, runningTemplate *regexp.Regexp) *Service {
 	return &Service{
 		Name:          Name,
 		Command:       Command,
@@ -98,21 +97,25 @@ func (s *Service) setFailed(err error) {
 	s.State = StateFailed
 	s.Err = err
 	s.channel <- ServiceMessage{
+		Name:  s.Name,
 		Type:  MessageState,
 		State: StateFailed,
 		Value: err.Error(),
 	}
+	close(s.channel)
 }
 
 func (s *Service) setStarted() {
 	s.State = StateStarted
 	s.channel <- ServiceMessage{
+		Name:  s.Name,
 		Type:  MessageState,
 		State: StateStarted,
 	}
 	if s.runningRegexp == nil {
 		s.State = StateRunning
 		s.channel <- ServiceMessage{
+			Name:  s.Name,
 			Type:  MessageState,
 			State: StateRunning,
 		}
@@ -122,14 +125,17 @@ func (s *Service) setStarted() {
 func (s *Service) setFinished() {
 	s.State = StateFinished
 	s.channel <- ServiceMessage{
+		Name:  s.Name,
 		Type:  MessageState,
 		State: StateFinished,
 	}
+	close(s.channel)
 }
 
 func (s *Service) setRunning() {
 	s.State = StateRunning
 	s.channel <- ServiceMessage{
+		Name:  s.Name,
 		Type:  MessageState,
 		State: StateRunning,
 	}
@@ -142,6 +148,7 @@ func (s *Service) handleIncomeString(input string) {
 		}
 	}
 	s.channel <- ServiceMessage{
+		Name:  s.Name,
 		Type:  MessageString,
 		Value: input,
 	}

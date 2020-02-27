@@ -110,21 +110,21 @@ func TestServiceStartSimple(t *testing.T) {
 	messages := service.Start(nil)
 	recorded := []ServiceMessage{}
 	for message := range messages {
-		if message.Type == MessageState && !isStartedState(message.State) {
-			close(messages)
-		}
 		recorded = append(recorded, message)
 	}
 	assert.Equal(t, []ServiceMessage{
 		ServiceMessage{
+			Name:  "SIMPLE",
 			Type:  0,
 			State: StateStarted,
 		},
 		ServiceMessage{
+			Name:  "SIMPLE",
 			Type:  0,
 			State: StateRunning,
 		},
 		ServiceMessage{
+			Name:  "SIMPLE",
 			Type:  0,
 			State: StateFinished,
 		},
@@ -137,21 +137,21 @@ func TestServiceStartError(t *testing.T) {
 	messages := service.Start(nil)
 	recorded := []ServiceMessage{}
 	for message := range messages {
-		if message.Type == MessageState && !isStartedState(message.State) {
-			close(messages)
-		}
 		recorded = append(recorded, message)
 	}
 	assert.Equal(t, []ServiceMessage{
 		ServiceMessage{
+			Name:  "ERROR",
 			Type:  0,
 			State: StateStarted,
 		},
 		ServiceMessage{
+			Name:  "ERROR",
 			Type:  0,
 			State: StateRunning,
 		},
 		ServiceMessage{
+			Name:  "ERROR",
 			Type:  0,
 			State: StateFailed,
 			Value: "exit status 10",
@@ -167,33 +167,36 @@ func TestServiceStartedRunningFinished(t *testing.T) {
 	messages := service.Start(nil)
 	recorded := []ServiceMessage{}
 	for message := range messages {
-		if message.Type == MessageState && !isStartedState(message.State) {
-			close(messages)
-		}
 		recorded = append(recorded, message)
 	}
 	assert.Equal(t, []ServiceMessage{
 		ServiceMessage{
+			Name:  "CAT",
 			Type:  0,
 			State: StateStarted,
 		},
 		ServiceMessage{
+			Name:  "CAT",
 			Type:  1,
 			Value: "hello",
 		},
 		ServiceMessage{
+			Name:  "CAT",
 			Type:  0,
 			State: StateRunning,
 		},
 		ServiceMessage{
+			Name:  "CAT",
 			Type:  1,
 			Value: "ready",
 		},
 		ServiceMessage{
+			Name:  "CAT",
 			Type:  1,
 			Value: "exit",
 		},
 		ServiceMessage{
+			Name:  "CAT",
 			Type:  0,
 			State: StateFinished,
 		},
@@ -207,9 +210,6 @@ func TestServiceStop(t *testing.T) {
 	messages := service.Start(nil)
 	recorded := []ServiceMessage{}
 	for message := range messages {
-		if message.Type == MessageState && !isStartedState(message.State) {
-			close(messages)
-		}
 		if message.Type == MessageState && message.State == StateRunning {
 			//time.Sleep(time.Millisecond * 100)
 			service.Stop()
@@ -218,18 +218,22 @@ func TestServiceStop(t *testing.T) {
 	}
 	assert.Equal(t, []ServiceMessage{
 		ServiceMessage{
+			Name:  "ERROR",
 			Type:  0,
 			State: StateStarted,
 		},
 		ServiceMessage{
+			Name:  "ERROR",
 			Type:  0,
 			State: StateRunning,
 		},
 		ServiceMessage{
+			Name:  "ERROR",
 			Type:  1,
 			Value: "ready",
 		},
 		ServiceMessage{
+			Name:  "ERROR",
 			Type:  0,
 			State: StateFinished,
 		},

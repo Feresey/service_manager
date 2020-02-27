@@ -16,7 +16,7 @@ func TestServiceManagerStart(t *testing.T) {
 	m := NewServiceManager()
 	defer m.Close()
 	startTemplate := regexp.MustCompile("ready")
-	serviceMessages := m.Register("TEST", "service", []string{"lines", "hello,ready"}, startTemplate, []ServiceName{})
+	serviceMessages := m.Register("TEST", "service", []string{"lines", "hello,ready"}, startTemplate, []string{})
 	defer close(serviceMessages)
 	m.Start("TEST")
 
@@ -58,7 +58,7 @@ func TestServiceManagerRestart(t *testing.T) {
 	m := NewServiceManager()
 	defer m.Close()
 	startTemplate := regexp.MustCompile("ready")
-	serviceMessages := m.Register("TEST", "service", []string{"lines", "hello,ready"}, startTemplate, []ServiceName{})
+	serviceMessages := m.Register("TEST", "service", []string{"lines", "hello,ready"}, startTemplate, []string{})
 	defer close(serviceMessages)
 	recorded := []ServiceMessage{}
 	expected := []ServiceMessage{
@@ -110,9 +110,9 @@ func TestServiceManagerStartWithDependency(t *testing.T) {
 	m := NewServiceManager()
 	defer m.Close()
 	startTemplate := regexp.MustCompile("ready")
-	aMessages := m.Register("A", "service", []string{"lines", "ready"}, startTemplate, []ServiceName{})
+	aMessages := m.Register("A", "service", []string{"lines", "ready"}, startTemplate, []string{})
 	defer close(aMessages)
-	bMessages := m.Register("B", "service", []string{}, nil, []ServiceName{"A"})
+	bMessages := m.Register("B", "service", []string{}, nil, []string{"A"})
 	defer close(bMessages)
 
 	wg := &sync.WaitGroup{}
@@ -166,9 +166,9 @@ func TestServiceManagerStartWithFullfilledDependency(t *testing.T) {
 
 	m := NewServiceManager()
 	startTemplate := regexp.MustCompile("ready")
-	aMessages := m.Register("A", "service", []string{"lines", "ready", "sleep", "5000"}, startTemplate, []ServiceName{})
+	aMessages := m.Register("A", "service", []string{"lines", "ready", "sleep", "5000"}, startTemplate, []string{})
 	defer close(aMessages)
-	bMessages := m.Register("B", "service", []string{}, nil, []ServiceName{"A"})
+	bMessages := m.Register("B", "service", []string{}, nil, []string{"A"})
 	defer close(bMessages)
 
 	wg := &sync.WaitGroup{}
@@ -226,7 +226,7 @@ func TestServiceManagerStop(t *testing.T) {
 	defer m.Close()
 
 	startTemplate := regexp.MustCompile("ready")
-	serviceMessages := m.Register("TEST", "service", []string{"lines", "ready", "sleep", "5000"}, startTemplate, []ServiceName{})
+	serviceMessages := m.Register("TEST", "service", []string{"lines", "ready", "sleep", "5000"}, startTemplate, []string{})
 	defer close(serviceMessages)
 	m.Start("TEST")
 
@@ -259,10 +259,10 @@ func TestServiceManagerStopWithDependency(t *testing.T) {
 	m := NewServiceManager()
 	defer m.Close()
 
-	aMessages := m.Register("A", "service", []string{"sleep", "5000"}, nil, []ServiceName{})
+	aMessages := m.Register("A", "service", []string{"sleep", "5000"}, nil, []string{})
 	defer close(aMessages)
 	startTemplate := regexp.MustCompile("ready")
-	bMessages := m.Register("B", "service", []string{"lines", "ready", "sleep", "5000"}, startTemplate, []ServiceName{"A"})
+	bMessages := m.Register("B", "service", []string{"lines", "ready", "sleep", "5000"}, startTemplate, []string{"A"})
 	defer close(bMessages)
 
 	wg := &sync.WaitGroup{}
@@ -324,11 +324,11 @@ func TestServiceManagerClose(t *testing.T) {
 	m := NewServiceManager()
 
 	startTemplate := regexp.MustCompile("ready")
-	aMessages := m.Register("A", "service", []string{"lines", "ready", "sleep", "5000"}, startTemplate, []ServiceName{})
+	aMessages := m.Register("A", "service", []string{"lines", "ready", "sleep", "5000"}, startTemplate, []string{})
 	defer close(aMessages)
-	bMessages := m.Register("B", "service", []string{"lines", "ready", "sleep", "5000"}, startTemplate, []ServiceName{"A"})
+	bMessages := m.Register("B", "service", []string{"lines", "ready", "sleep", "5000"}, startTemplate, []string{"A"})
 	defer close(bMessages)
-	cMessages := m.Register("C", "service", []string{"lines", "ready", "sleep", "5000"}, startTemplate, []ServiceName{})
+	cMessages := m.Register("C", "service", []string{"lines", "ready", "sleep", "5000"}, startTemplate, []string{})
 	defer close(cMessages)
 
 	wg := &sync.WaitGroup{}

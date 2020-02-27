@@ -4,21 +4,21 @@ import (
 	"sort"
 )
 
-func InitOrder(init ServiceName, requirements map[ServiceName][]ServiceName) []ServiceName {
-	order := []ServiceName{}
+func InitOrder(init string, requirements map[string][]string) []string {
+	order := []string{}
 	dfsPostOrder(init, requirements, &order)
 	return deduplicateOrder(order)
 }
 
-func dfsPostOrder(root ServiceName, requirements map[ServiceName][]ServiceName, order *[]ServiceName) {
+func dfsPostOrder(root string, requirements map[string][]string, order *[]string) {
 	for _, parent := range requirements[root] {
 		dfsPostOrder(parent, requirements, order)
 	}
 	*order = append(*order, root)
 }
 
-func deduplicateOrder(order []ServiceName) []ServiceName {
-	founded := map[ServiceName]struct{}{}
+func deduplicateOrder(order []string) []string {
+	founded := map[string]struct{}{}
 	o := order[:0]
 	for _, e := range order {
 		_, ok := founded[e]
@@ -32,8 +32,8 @@ func deduplicateOrder(order []ServiceName) []ServiceName {
 
 // -1 we in
 //  1 visited
-func IsRequirementsAcyclic(requirements map[ServiceName][]ServiceName) bool {
-	visited := map[ServiceName]int{}
+func IsRequirementsAcyclic(requirements map[string][]string) bool {
+	visited := map[string]int{}
 	for name, _ := range requirements {
 		if isRequirementsAcyclicDfs(name, requirements, visited) == false {
 			return false
@@ -42,7 +42,7 @@ func IsRequirementsAcyclic(requirements map[ServiceName][]ServiceName) bool {
 	return true
 }
 
-func isRequirementsAcyclicDfs(root ServiceName, requirements map[ServiceName][]ServiceName, memory map[ServiceName]int) bool {
+func isRequirementsAcyclicDfs(root string, requirements map[string][]string, memory map[string]int) bool {
 	state, ok := memory[root]
 	if ok == true {
 		if state == -1 {
@@ -61,8 +61,8 @@ func isRequirementsAcyclicDfs(root ServiceName, requirements map[ServiceName][]S
 	return true
 }
 
-func GetOrphanedStartedServices(states map[ServiceName]State, requirements map[ServiceName][]ServiceName) []ServiceName {
-	orphanedRunning := map[ServiceName]struct{}{}
+func GetOrphanedStartedServices(states map[string]State, requirements map[string][]string) []string {
+	orphanedRunning := map[string]struct{}{}
 	for name, state := range states {
 		if isStartedState(state) {
 			orphanedRunning[name] = struct{}{}
@@ -76,7 +76,7 @@ func GetOrphanedStartedServices(states map[ServiceName]State, requirements map[S
 			delete(orphanedRunning, parent)
 		}
 	}
-	services := make([]ServiceName, 0, len(orphanedRunning))
+	services := make([]string, 0, len(orphanedRunning))
 	for name, _ := range orphanedRunning {
 		services = append(services, name)
 	}
@@ -85,6 +85,47 @@ func GetOrphanedStartedServices(states map[ServiceName]State, requirements map[S
 
 	})
 	return services
+}
+
+func GetEnabledLeafsFromRoot(root string, states map[string]State, requirements map[string][]string) []string {
+	results := make([]string, 0)
+	visited := make(map[string]bool)
+	getEnabledLeafs(root, states, requirements, visited, &results)
+	sort.Slice(results, func(i, j int) bool {
+		return results[i] < results[j]
+	})
+	return results
+}
+func GetEnabledLeafs(states map[string]State, requirements map[string][]string) []string {
+	results := make([]string, 0)
+	visited := make(map[string]bool)
+	for name, _ := range states {
+		getEnabledLeafs(name, states, requirements, visited, &results)
+	}
+
+	sort.Slice(results, func(i, j int) bool {
+		return results[i] < results[j]
+	})
+	return results
+}
+func getEnabledLeafs(root string, states map[string]State, requirements map[string][]string, visited map[string]bool, results *[]string) bool {
+	if p, ok := visited[root]; ok == true {
+		return p
+	}
+	if !isStartedState(states[root]) {
+		visited[root] = true
+		return true
+	}
+	// it is started
+	for _, requirement := range requirements[root] {
+		if getEnabledLeafs(requirement, states, requirements, visited, results) == false {
+			visited[root] = false
+			return false
+		}
+	}
+	*results = append(*results, root)
+	visited[root] = false
+	return false
 }
 
 /*
