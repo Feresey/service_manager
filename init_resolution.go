@@ -128,9 +128,32 @@ func getEnabledLeafs(root string, states map[string]State, requirements map[stri
 	return false
 }
 
-/*
-func mergeOneList(list []ServiceName, lists [][]ServiceName) []ServiceName {
-
-
+func GetDisabledLeafsFromRoot(root string, states map[string]State, requirements map[string][]string) []string {
+	results := make([]string, 0)
+	getDisabledLeafsFromRoot(root, states, requirements, &results)
+	sort.Slice(results, func(i, j int) bool {
+		return results[i] < results[j]
+	})
+	return results
 }
-*/
+
+//   A
+//  /|
+// F B
+//  /|\
+// C D E
+func getDisabledLeafsFromRoot(root string, states map[string]State, requirements map[string][]string, results *[]string) bool {
+	if isStartedState(states[root]) {
+		return true
+	}
+	isLeafsEnabled := true
+	for _, requirement := range requirements[root] {
+		if getDisabledLeafsFromRoot(requirement, states, requirements, results) == false {
+			isLeafsEnabled = false
+		}
+	}
+	if isLeafsEnabled == true {
+		*results = append(*results, root)
+	}
+	return false
+}

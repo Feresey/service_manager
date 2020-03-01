@@ -249,6 +249,26 @@ func TestGetEnabledLeafs(t *testing.T) {
 			},
 			expected: []string{"a", "d"},
 		},
+		"big example": {
+			requirements: map[string][]string{
+				"a": []string{
+					"b", "c",
+				},
+				"b": []string{
+					"d", "e",
+				},
+				"c": []string{
+					"f", "t", "g",
+				},
+			},
+			states: map[string]State{
+				"a": StateRunning,
+				"c": StateRunning,
+				"t": StateRunning,
+				"f": StateRunning,
+			},
+			expected: []string{"f", "t"},
+		},
 		"One on": {
 			requirements: map[string][]string{
 				"a": []string{},
@@ -278,6 +298,88 @@ func TestGetEnabledLeafs(t *testing.T) {
 			result := GetEnabledLeafs(tc.states, tc.requirements)
 			assert.Equal(t, tc.expected, result)
 
+		})
+	}
+}
+func TestGetDisabledLeafs(t *testing.T) {
+	testCases := map[string]struct {
+		root         string
+		requirements map[string][]string
+		states       map[string]State
+		expected     []string
+	}{
+		"with target that has no requirements": {
+			root: "a",
+			requirements: map[string][]string{
+				"a": []string{
+					"b", "c",
+				},
+			},
+			states: map[string]State{
+				"a": StateDead,
+				"b": StateRunning,
+				"d": StateRunning,
+				"e": StateDead,
+			},
+			expected: []string{"c"},
+		},
+		"with target that has requirements but disabled": {
+			root: "a",
+			requirements: map[string][]string{
+				"a": []string{
+					"b", "c",
+				},
+			},
+			states: map[string]State{
+				"a": StateDead,
+				"d": StateRunning,
+			},
+			expected: []string{"b", "c"},
+		},
+		"big example": {
+			root: "a",
+			requirements: map[string][]string{
+				"a": []string{
+					"b", "c",
+				},
+				"b": []string{
+					"d", "e",
+				},
+				"c": []string{
+					"f", "t", "g",
+				},
+			},
+			states: map[string]State{
+				"b": StateRunning,
+				"g": StateRunning,
+			},
+			expected: []string{"f", "t"},
+		},
+		"One on": {
+			root: "a",
+			requirements: map[string][]string{
+				"a": []string{},
+			},
+			states: map[string]State{
+				"a": StateStarted,
+			},
+			expected: []string{},
+		},
+		"One off": {
+			root: "a",
+			requirements: map[string][]string{
+				"a": []string{},
+			},
+			states: map[string]State{
+				"a": StateDead,
+			},
+			expected: []string{"a"},
+		},
+	}
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			result := GetDisabledLeafsFromRoot(tc.root, tc.states, tc.requirements)
+			assert.Equal(t, tc.expected, result)
 		})
 	}
 }
