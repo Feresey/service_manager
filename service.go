@@ -9,7 +9,7 @@ import (
 	"regexp"
 )
 
-//go:generate enumer -text -type MessageType $GOFILE
+//go:generate enumer -text -type MessageType,State --output service_enumer.go $GOFILE
 
 type MessageType int
 
@@ -27,8 +27,6 @@ type ServiceMessage struct {
 }
 
 type State int
-
-//go:generate enumer -text -type State $GOFILE
 
 const (
 	StateDead State = iota

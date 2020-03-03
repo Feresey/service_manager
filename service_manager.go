@@ -4,7 +4,7 @@ import (
 	"regexp"
 )
 
-//go:generate enumer -text -type TaskType $GOFILE
+//go:generate enumer -text -type TaskType -output service_manager_enumer.go $GOFILE
 
 type TaskType int
 
