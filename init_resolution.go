@@ -112,7 +112,8 @@ func getEnabledLeafs(root string, states map[string]State, requirements map[stri
 	if p, ok := visited[root]; ok == true {
 		return p
 	}
-	if !isStartedState(states[root]) {
+	//if !isStartedState(states[root]) {
+	if states[root] == StateDead {
 		visited[root] = true
 		return true
 	}
@@ -143,7 +144,7 @@ func GetDisabledLeafsFromRoot(root string, states map[string]State, requirements
 //  /|\
 // C D E
 func getDisabledLeafsFromRoot(root string, states map[string]State, requirements map[string][]string, results *[]string) bool {
-	if isStartedState(states[root]) {
+	if states[root] == StateRunning {
 		return true
 	}
 	isLeafsEnabled := true

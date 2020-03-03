@@ -5,6 +5,8 @@ import (
 	"sync"
 )
 
+//go:generate enumer -text -type TaskType $GOFILE
+
 type TaskType int
 
 const (
@@ -26,7 +28,6 @@ type ServiceManager struct {
 	taskChannel  chan TaskMessage
 	states       map[string]State
 	wgMerge      sync.WaitGroup
-
 	// When poll exited
 	pollDone chan struct{}
 }
@@ -60,10 +61,11 @@ func (sm *ServiceManager) Init() (chan ServiceMessage, error) {
 	// Graph is acyclic
 	// All requirements does exists
 	go sm.poll()
-	return sm.merged, nil
+	return sm.output, nil
 }
 
 // Start starts registered service. You should call all Register before first Start
+// You shouldn't call Start in the same goroutine you poll messages from manager
 func (sm *ServiceManager) Start(name string) {
 	sm.taskChannel <- TaskMessage{
 		Name: name,
@@ -82,7 +84,7 @@ func (sm *ServiceManager) Close() {
 	sm.taskChannel <- TaskMessage{
 		Task: TaskExit,
 	}
-	sm.wgMerge.Wait()
+	<-sm.pollDone
 	close(sm.output)
 	close(sm.merged)
 	close(sm.taskChannel)
@@ -112,7 +114,10 @@ loop:
 
 			tasks = append(tasks, task)
 		case message := <-sm.merged:
-			sm.output <- message
+			// ignore StateDead because it is used to check that Service channel was closed
+			if message.Type != MessageState || message.State != StateDead {
+				sm.output <- message
+			}
 			if message.Type == MessageState {
 				sm.states[message.Name] = message.State
 			}
@@ -120,15 +125,24 @@ loop:
 				continue loop
 			}
 		}
-		if sm.applyTask(tasks[0], changed) {
+		for len(tasks) > 0 && sm.applyTask(tasks[0], changed) {
 			tasks = tasks[1:]
 		}
-
-		if len(tasks) == 0 && isExiting {
-			break loop
+		/*
+			if len(tasks) > 0 &&
+				tasks = tasks[1:]
+			}
+		*/
+		if len(tasks) == 0 {
+			if isExiting {
+				break loop
+			}
+			changed = make(map[string]struct{})
 		}
+
 	}
 	sm.wgMerge.Wait()
+	sm.pollDone <- struct{}{}
 }
 
 var scheduleFuncMap = map[TaskType]func(root string, states map[string]State, requirements map[string][]string) []string{
@@ -143,6 +157,9 @@ func (sm *ServiceManager) applyTask(task TaskMessage, changed map[string]struct{
 	scheduleFunc := scheduleFuncMap[task.Task]
 	schedule := scheduleFunc(task.Name, sm.states, sm.requirements)
 	// filter schedule to get what we should activate
+	if len(schedule) == 0 {
+		return true
+	}
 	n := 0
 	for _, x := range schedule {
 		if _, ok := changed[x]; ok == false {
@@ -151,9 +168,6 @@ func (sm *ServiceManager) applyTask(task TaskMessage, changed map[string]struct{
 		}
 	}
 	schedule = schedule[:n]
-	if len(schedule) == 0 {
-		return true
-	}
 
 	taskFunc := sm.stopService
 	if task.Task == TaskStart {
@@ -162,6 +176,7 @@ func (sm *ServiceManager) applyTask(task TaskMessage, changed map[string]struct{
 
 	for _, name := range schedule {
 		taskFunc(name)
+		changed[name] = struct{}{}
 	}
 	return false
 }
@@ -174,6 +189,11 @@ func (sm *ServiceManager) startService(name string) {
 		go func() {
 			for message := range serviceChan {
 				sm.merged <- message
+			}
+			sm.merged <- ServiceMessage{
+				Name:  name,
+				Type:  MessageState,
+				State: StateDead,
 			}
 			sm.wgMerge.Done()
 		}()

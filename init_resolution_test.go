@@ -317,6 +317,7 @@ func TestGetDisabledLeafs(t *testing.T) {
 			},
 			states: map[string]State{
 				"a": StateDead,
+				"c": StateStarted,
 				"b": StateRunning,
 				"d": StateRunning,
 				"e": StateDead,
@@ -361,7 +362,7 @@ func TestGetDisabledLeafs(t *testing.T) {
 				"a": []string{},
 			},
 			states: map[string]State{
-				"a": StateStarted,
+				"a": StateRunning,
 			},
 			expected: []string{},
 		},
