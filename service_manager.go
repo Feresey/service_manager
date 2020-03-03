@@ -2,7 +2,6 @@ package main
 
 import (
 	"regexp"
-	"sync"
 )
 
 //go:generate enumer -text -type TaskType $GOFILE
@@ -27,7 +26,7 @@ type ServiceManager struct {
 	merged       chan ServiceMessage
 	taskChannel  chan TaskMessage
 	states       map[string]State
-	wgMerge      sync.WaitGroup
+
 	// When poll exited
 	pollDone chan struct{}
 }
@@ -141,7 +140,6 @@ loop:
 		}
 
 	}
-	sm.wgMerge.Wait()
 	sm.pollDone <- struct{}{}
 }
 
@@ -185,7 +183,6 @@ func (sm *ServiceManager) startService(name string) {
 	if !isStartedState(sm.states[name]) {
 		serviceChan := sm.services[name].Start(nil)
 		sm.states[name] = StateStarted
-		sm.wgMerge.Add(1)
 		go func() {
 			for message := range serviceChan {
 				sm.merged <- message
@@ -195,7 +192,6 @@ func (sm *ServiceManager) startService(name string) {
 				Type:  MessageState,
 				State: StateDead,
 			}
-			sm.wgMerge.Done()
 		}()
 	}
 }
