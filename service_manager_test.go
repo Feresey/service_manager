@@ -16,7 +16,7 @@ func TestServiceManagerStart(t *testing.T) {
 	m := NewServiceManager()
 	startTemplate := regexp.MustCompile("ready")
 	m.Register("TEST", "service", []string{"lines", "hello,ready"}, startTemplate, []string{})
-	messages, err := m.Init()
+	messages, _, err := m.Init()
 	if err != nil {
 		t.Fatal("can not init service manager: ", err)
 	}
@@ -118,7 +118,7 @@ func TestServiceManagerRestart(t *testing.T) {
 		},
 	}
 
-	messages, err := m.Init()
+	messages, _, err := m.Init()
 	if err != nil {
 		t.Fatal("can not init service manager: ", err)
 	}
@@ -148,7 +148,7 @@ func TestServiceManagerStartWithDependency(t *testing.T) {
 
 	aStarts := int64(0)
 
-	messages, err := m.Init()
+	messages, _, err := m.Init()
 	if err != nil {
 		t.Fatal("can not init service manager: ", err)
 	}
@@ -203,7 +203,7 @@ func TestServiceManagerStartWithFullfilledDependency(t *testing.T) {
 
 	aStarts := int64(0)
 
-	messages, err := m.Init()
+	messages, _, err := m.Init()
 	if err != nil {
 		t.Fatal("can not init service manager: ", err)
 	}
@@ -261,7 +261,7 @@ func TestServiceManagerStop(t *testing.T) {
 	startTemplate := regexp.MustCompile("ready")
 
 	m.Register("TEST", "service", []string{"lines", "ready", "sleep", "10000"}, startTemplate, []string{})
-	messages, err := m.Init()
+	messages, _, err := m.Init()
 	if err != nil {
 		t.Fatal("can not init service manager: ", err)
 	}
@@ -305,7 +305,7 @@ func TestServiceManagerStopWithDependency(t *testing.T) {
 	startTemplate := regexp.MustCompile("ready")
 	m.Register("B", "service", []string{"lines", "ready", "sleep", "10000"}, startTemplate, []string{"A"})
 
-	messages, err := m.Init()
+	messages, _, err := m.Init()
 	if err != nil {
 		t.Fatal("can not init service manager: ", err)
 	}
@@ -369,7 +369,7 @@ func TestServiceManagerClose(t *testing.T) {
 	finished := make(chan struct{})
 	var finishes int64 = 0
 
-	messages, err := m.Init()
+	messages, _, err := m.Init()
 	if err != nil {
 		t.Fatal("can not init service manager: ", err)
 	}

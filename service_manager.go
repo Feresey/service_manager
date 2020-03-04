@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"regexp"
+	"sort"
 )
 
 //go:generate enumer -text -type TaskType -output service_manager_enumer.go $GOFILE
@@ -49,18 +51,27 @@ func (sm *ServiceManager) Register(name string,
 	args []string,
 	running *regexp.Regexp,
 	requirements []string,
-) {
+) error {
+	if _, ok := sm.services[name]; ok == true {
+		return fmt.Errorf("service name %s already used", name)
+	}
 	sm.services[name] = NewService(name, cmd, args, running)
 	sm.requirements[name] = requirements
 	sm.states[name] = StateDead
+	return nil
 }
 
-func (sm *ServiceManager) Init() (chan ServiceMessage, error) {
+func (sm *ServiceManager) Init() (chan ServiceMessage, []string, error) {
 	// TODO: make checks about requirements:
 	// Graph is acyclic
 	// All requirements does exists
+	services := make([]string, 0, len(sm.services))
+	for name, _ := range sm.services {
+		services = append(services, name)
+	}
+	sort.Strings(services)
 	go sm.poll()
-	return sm.output, nil
+	return sm.output, services, nil
 }
 
 // Start starts registered service. You should call all Register before first Start
