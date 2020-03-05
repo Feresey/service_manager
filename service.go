@@ -54,20 +54,22 @@ type Service struct {
 	cmd           *exec.Cmd
 }
 
-func NewService(Name string, Command string, Args []string, runningTemplate *regexp.Regexp) *Service {
+func NewService(name string, command string, args []string, runningTemplate *regexp.Regexp) *Service {
 	return &Service{
-		Name:          Name,
-		Command:       Command,
-		Args:          Args,
+		Name:          name,
+		Command:       command,
+		Args:          args,
 		runningRegexp: runningTemplate,
 	}
 }
 
 func (s *Service) Start(ctx context.Context) chan ServiceMessage {
-	if ctx == nil {
-		ctx = context.Background()
-	}
+	// Ну и нахйя ты передаешь контекст?
+	// if ctx == nil {
+	// 	ctx = context.Background()
+	// }
 	ctx, cancel := context.WithCancel(ctx)
+
 	s.ctx = ctx
 	s.cancel = cancel
 
@@ -75,17 +77,21 @@ func (s *Service) Start(ctx context.Context) chan ServiceMessage {
 	stdout, err := s.cmd.StdoutPipe()
 	s.channel = make(chan ServiceMessage, 3) // we should handle one error that can occur during initialization and started and running messages
 	s.setStarted()
+
 	if err != nil {
 		s.setFailed(err)
 		return s.channel
 	}
+
 	if err := s.cmd.Start(); err != nil {
 		s.setFailed(err)
 		return s.channel
 	}
+
 	s.output = stdout
 
 	go s.poll()
+
 	return s.channel
 }
 
@@ -108,6 +114,7 @@ func (s *Service) setFailed(err error) {
 		State: StateFailed,
 		Value: err.Error(),
 	}
+
 	close(s.channel)
 }
 
@@ -118,6 +125,7 @@ func (s *Service) setStarted() {
 		Type:  MessageState,
 		State: StateStarted,
 	}
+
 	if s.runningRegexp == nil {
 		s.State = StateRunning
 		s.channel <- ServiceMessage{
@@ -135,6 +143,7 @@ func (s *Service) setFinished() {
 		Type:  MessageState,
 		State: StateFinished,
 	}
+
 	close(s.channel)
 }
 
@@ -162,17 +171,21 @@ func (s *Service) handleIncomeString(input string) {
 
 func (s *Service) poll() {
 	scanner := bufio.NewScanner(s.output)
+
 	for scanner.Scan() {
 		s.handleIncomeString(scanner.Text())
 	}
+
 	if err := scanner.Err(); err != nil {
 		s.setFailed(err)
 		return
 	}
+
 	if err := s.cmd.Wait(); err != nil {
 		s.setFailed(err)
 		return
 	}
+
 	s.setFinished()
 }
 

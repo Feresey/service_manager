@@ -34,13 +34,10 @@ func TestDeduplicateOrder(t *testing.T) {
 	}
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			input := append([]string{}, tc.input...)
-			input = deduplicateOrder(input)
+			input := deduplicateOrder(tc.input)
 			assert.Equal(t, tc.expected, input)
-
 		})
 	}
-
 }
 
 func TestInitOrder(t *testing.T) {
@@ -52,7 +49,7 @@ func TestInitOrder(t *testing.T) {
 		"one parent": {
 			init: "s",
 			requirements: map[string][]string{
-				"s": []string{
+				"s": {
 					"p",
 				},
 			},
@@ -61,7 +58,7 @@ func TestInitOrder(t *testing.T) {
 		"two parents": {
 			init: "s",
 			requirements: map[string][]string{
-				"s": []string{
+				"s": {
 					"a", "b",
 				},
 			},
@@ -70,13 +67,13 @@ func TestInitOrder(t *testing.T) {
 		"diamond": {
 			init: "s",
 			requirements: map[string][]string{
-				"s": []string{
+				"s": {
 					"a", "b",
 				},
-				"a": []string{
+				"a": {
 					"c",
 				},
-				"b": []string{
+				"b": {
 					"c",
 				},
 			},
@@ -85,10 +82,10 @@ func TestInitOrder(t *testing.T) {
 		"no local parenty": {
 			init: "s",
 			requirements: map[string][]string{
-				"s": []string{
+				"s": {
 					"a", "b",
 				},
-				"b": []string{
+				"b": {
 					"a",
 				},
 			},
@@ -97,13 +94,13 @@ func TestInitOrder(t *testing.T) {
 		"big": {
 			init: "s",
 			requirements: map[string][]string{
-				"s": []string{
+				"s": {
 					"a", "b", "c",
 				},
-				"b": []string{
+				"b": {
 					"a", "d",
 				},
-				"c": []string{
+				"c": {
 					"d",
 				},
 			},
@@ -114,7 +111,6 @@ func TestInitOrder(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			result := InitOrder(tc.init, tc.requirements)
 			assert.Equal(t, tc.expected, result)
-
 		})
 	}
 }
@@ -125,7 +121,7 @@ func TestAcyclic(t *testing.T) {
 	}{
 		"acyclic simple": {
 			requirements: map[string][]string{
-				"a": []string{
+				"a": {
 					"b",
 				},
 			},
@@ -133,7 +129,7 @@ func TestAcyclic(t *testing.T) {
 		},
 		"cyclic simple": {
 			requirements: map[string][]string{
-				"a": []string{
+				"a": {
 					"a",
 				},
 			},
@@ -141,13 +137,13 @@ func TestAcyclic(t *testing.T) {
 		},
 		"acyclic": {
 			requirements: map[string][]string{
-				"a": []string{
+				"a": {
 					"b", "c",
 				},
-				"b": []string{
+				"b": {
 					"c",
 				},
-				"c": []string{
+				"c": {
 					"d",
 				},
 			},
@@ -155,13 +151,13 @@ func TestAcyclic(t *testing.T) {
 		},
 		"cyclic": {
 			requirements: map[string][]string{
-				"a": []string{
+				"a": {
 					"b", "c",
 				},
-				"b": []string{
+				"b": {
 					"c",
 				},
-				"c": []string{
+				"c": {
 					"a",
 				},
 			},
@@ -172,7 +168,6 @@ func TestAcyclic(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			result := IsRequirementsAcyclic(tc.requirements)
 			assert.Equal(t, tc.expected, result)
-
 		})
 	}
 }
@@ -185,7 +180,7 @@ func TestGetOrphanedStartedServices(t *testing.T) {
 	}{
 		"with target that has no requirements": {
 			requirements: map[string][]string{
-				"a": []string{
+				"a": {
 					"b", "c",
 				},
 			},
@@ -198,7 +193,7 @@ func TestGetOrphanedStartedServices(t *testing.T) {
 		},
 		"with target that has requirements but disabled": {
 			requirements: map[string][]string{
-				"a": []string{
+				"a": {
 					"b", "c",
 				},
 			},
@@ -214,7 +209,6 @@ func TestGetOrphanedStartedServices(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			result := GetOrphanedStartedServices(tc.states, tc.requirements)
 			assert.Equal(t, tc.expected, result)
-
 		})
 	}
 }
@@ -226,7 +220,7 @@ func TestGetEnabledLeafs(t *testing.T) {
 	}{
 		"with target that has no requirements": {
 			requirements: map[string][]string{
-				"a": []string{
+				"a": {
 					"b", "c",
 				},
 			},
@@ -239,7 +233,7 @@ func TestGetEnabledLeafs(t *testing.T) {
 		},
 		"with target that has requirements but disabled": {
 			requirements: map[string][]string{
-				"a": []string{
+				"a": {
 					"b", "c",
 				},
 			},
@@ -251,13 +245,13 @@ func TestGetEnabledLeafs(t *testing.T) {
 		},
 		"big example": {
 			requirements: map[string][]string{
-				"a": []string{
+				"a": {
 					"b", "c",
 				},
-				"b": []string{
+				"b": {
 					"d", "e",
 				},
-				"c": []string{
+				"c": {
 					"f", "t", "g",
 				},
 			},
@@ -271,7 +265,7 @@ func TestGetEnabledLeafs(t *testing.T) {
 		},
 		"One on": {
 			requirements: map[string][]string{
-				"a": []string{},
+				"a": {},
 			},
 			states: map[string]State{
 				"a": StateStarted,
@@ -280,7 +274,7 @@ func TestGetEnabledLeafs(t *testing.T) {
 		},
 		"One off": {
 			requirements: map[string][]string{
-				"a": []string{},
+				"a": {},
 			},
 			states: map[string]State{
 				"a": StateDead,
@@ -297,7 +291,6 @@ func TestGetEnabledLeafs(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			result := GetEnabledLeafs(tc.states, tc.requirements)
 			assert.Equal(t, tc.expected, result)
-
 		})
 	}
 }
@@ -311,7 +304,7 @@ func TestGetDisabledLeafs(t *testing.T) {
 		"with target that has no requirements": {
 			root: "a",
 			requirements: map[string][]string{
-				"a": []string{
+				"a": {
 					"b", "c",
 				},
 			},
@@ -327,7 +320,7 @@ func TestGetDisabledLeafs(t *testing.T) {
 		"with target that has requirements but disabled": {
 			root: "a",
 			requirements: map[string][]string{
-				"a": []string{
+				"a": {
 					"b", "c",
 				},
 			},
@@ -340,13 +333,13 @@ func TestGetDisabledLeafs(t *testing.T) {
 		"big example": {
 			root: "a",
 			requirements: map[string][]string{
-				"a": []string{
+				"a": {
 					"b", "c",
 				},
-				"b": []string{
+				"b": {
 					"d", "e",
 				},
-				"c": []string{
+				"c": {
 					"f", "t", "g",
 				},
 			},
@@ -359,7 +352,7 @@ func TestGetDisabledLeafs(t *testing.T) {
 		"One on": {
 			root: "a",
 			requirements: map[string][]string{
-				"a": []string{},
+				"a": {},
 			},
 			states: map[string]State{
 				"a": StateRunning,
@@ -369,7 +362,7 @@ func TestGetDisabledLeafs(t *testing.T) {
 		"One off": {
 			root: "a",
 			requirements: map[string][]string{
-				"a": []string{},
+				"a": {},
 			},
 			states: map[string]State{
 				"a": StateDead,

@@ -42,6 +42,7 @@ func NewServiceManager() *ServiceManager {
 		taskChannel:  make(chan TaskMessage),
 		states:       make(map[string]State),
 	}
+
 	return sm
 }
 
@@ -61,6 +62,7 @@ func (sm *ServiceManager) Init() (chan ServiceMessage, error) {
 	// Graph is acyclic
 	// All requirements does exists
 	go sm.poll()
+
 	return sm.output, nil
 }
 
@@ -125,6 +127,7 @@ loop:
 				continue loop
 			}
 		}
+
 		for len(tasks) > 0 && sm.applyTask(tasks[0], changed) {
 			tasks = tasks[1:]
 		}
@@ -139,7 +142,6 @@ loop:
 			}
 			changed = make(map[string]struct{})
 		}
-
 	}
 	sm.pollDone <- struct{}{}
 }
@@ -153,30 +155,37 @@ var scheduleFuncMap = map[TaskType]func(root string, states map[string]State, re
 }
 
 func (sm *ServiceManager) applyTask(task TaskMessage, changed map[string]struct{}) bool {
-	scheduleFunc := scheduleFuncMap[task.Task]
-	schedule := scheduleFunc(task.Name, sm.states, sm.requirements)
+	var (
+		scheduleFunc = scheduleFuncMap[task.Task]
+		schedule     = scheduleFunc(task.Name, sm.states, sm.requirements)
+		n            = 0
+	)
 	// filter schedule to get what we should activate
 	if len(schedule) == 0 {
 		return true
 	}
-	n := 0
+
 	for _, x := range schedule {
 		if _, ok := changed[x]; !ok {
 			schedule[n] = x
 			n++
 		}
 	}
+
 	schedule = schedule[:n]
 
 	taskFunc := sm.stopService
+
 	if task.Task == TaskStart {
 		taskFunc = sm.startService
 	}
 
 	for _, name := range schedule {
 		taskFunc(name)
+
 		changed[name] = struct{}{}
 	}
+
 	return false
 }
 
@@ -184,6 +193,7 @@ func (sm *ServiceManager) startService(name string) {
 	if !isStartedState(sm.states[name]) {
 		serviceChan := sm.services[name].Start(context.TODO())
 		sm.states[name] = StateStarted
+
 		go func() {
 			for message := range serviceChan {
 				sm.merged <- message

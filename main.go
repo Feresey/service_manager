@@ -14,7 +14,6 @@ func poll(messages chan ServiceMessage) {
 				close(messages)
 			}
 		case MessageString:
-
 		}
 
 		fmt.Printf("%+v\n", message)
