@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"io"
+	"log"
 	"os"
 	"os/exec"
 	"regexp"
@@ -90,7 +91,10 @@ func (s *Service) Start(ctx context.Context) chan ServiceMessage {
 
 func (s *Service) Stop() {
 	//if s.State == StateStarted || s.State == StateRunning {
-	s.cmd.Process.Signal(os.Interrupt)
+	err := s.cmd.Process.Signal(os.Interrupt)
+	if err != nil {
+		log.Print("Error stopping processes: ", err)
+	}
 	//s.cancel()
 	//}
 }
@@ -145,7 +149,7 @@ func (s *Service) setRunning() {
 
 func (s *Service) handleIncomeString(input string) {
 	if s.State == StateStarted && s.runningRegexp != nil {
-		if s.runningRegexp.MatchString(input) == true {
+		if s.runningRegexp.MatchString(input) {
 			s.setRunning()
 		}
 	}

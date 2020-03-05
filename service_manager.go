@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"regexp"
 )
 
@@ -160,7 +161,7 @@ func (sm *ServiceManager) applyTask(task TaskMessage, changed map[string]struct{
 	}
 	n := 0
 	for _, x := range schedule {
-		if _, ok := changed[x]; ok == false {
+		if _, ok := changed[x]; !ok {
 			schedule[n] = x
 			n++
 		}
@@ -181,7 +182,7 @@ func (sm *ServiceManager) applyTask(task TaskMessage, changed map[string]struct{
 
 func (sm *ServiceManager) startService(name string) {
 	if !isStartedState(sm.states[name]) {
-		serviceChan := sm.services[name].Start(nil)
+		serviceChan := sm.services[name].Start(context.TODO())
 		sm.states[name] = StateStarted
 		go func() {
 			for message := range serviceChan {

@@ -107,7 +107,7 @@ func TestServiceStartSimple(t *testing.T) {
 	defer setHelperCommand(t)()
 
 	service := NewService("SIMPLE", "service", []string{}, nil)
-	messages := service.Start(nil)
+	messages := service.Start(context.TODO())
 	recorded := []ServiceMessage{}
 	for message := range messages {
 		recorded = append(recorded, message)
@@ -134,7 +134,7 @@ func TestServiceStartError(t *testing.T) {
 	defer setHelperCommand(t)()
 
 	service := NewService("ERROR", "service", []string{"error"}, nil)
-	messages := service.Start(nil)
+	messages := service.Start(context.TODO())
 	recorded := []ServiceMessage{}
 	for message := range messages {
 		recorded = append(recorded, message)
@@ -164,7 +164,7 @@ func TestServiceStartedRunningFinished(t *testing.T) {
 
 	startTemplate := regexp.MustCompile("ready")
 	service := NewService("CAT", "service", []string{"lines", "hello,ready,exit"}, startTemplate)
-	messages := service.Start(nil)
+	messages := service.Start(context.TODO())
 	recorded := []ServiceMessage{}
 	for message := range messages {
 		recorded = append(recorded, message)
@@ -207,7 +207,7 @@ func TestServiceStop(t *testing.T) {
 
 	startTemplate := regexp.MustCompile("ready")
 	service := NewService("ERROR", "service", []string{"lines", "ready", "sleep", "10000", "lines", "extra"}, startTemplate)
-	messages := service.Start(nil)
+	messages := service.Start(context.TODO())
 	recorded := []ServiceMessage{}
 	for message := range messages {
 		if message.Type == MessageState && message.State == StateRunning {
