@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 )
@@ -23,6 +24,6 @@ func poll(messages chan ServiceMessage) {
 func main() {
 	template := regexp.MustCompile("started")
 	service := NewService("test input", "cat", []string{"text.txt"}, template)
-	messages := service.Start(nil)
+	messages := service.Start(context.TODO())
 	poll(messages)
 }
