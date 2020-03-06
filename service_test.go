@@ -32,6 +32,7 @@ func helperCommandContext(ctx context.Context, t *testing.T, omit string, s ...s
 	} else {
 		cmd = exec.Command(os.Args[0], cs...)
 	}
+
 	cmd.Env = []string{"GO_WANT_HELPER_PROCESS=1"}
 
 	return cmd
@@ -76,7 +77,9 @@ func execService(args []string) {
 			}
 
 			time.Sleep(time.Millisecond * time.Duration(m))
+
 			args = args[1:]
+
 		case "error":
 			os.Exit(unexpectedError)
 		}
@@ -105,6 +108,7 @@ func TestHelperService(t *testing.T) {
 			args = args[1:]
 			break
 		}
+
 		args = args[1:]
 	}
 
@@ -233,10 +237,13 @@ func TestServiceStartedRunningFinished(t *testing.T) {
 func TestServiceStop(t *testing.T) {
 	defer setHelperCommand(t)()
 
-	startTemplate := regexp.MustCompile("ready")
-	service := NewService("ERROR", "service", []string{"lines", "ready", "sleep", "10000", "lines", "extra"}, startTemplate)
-	messages := service.Start(context.TODO())
-	recorded := []ServiceMessage{}
+	var (
+		startTemplate = regexp.MustCompile("ready")
+		service       = NewService("ERROR", "service",
+			[]string{"lines", "ready", "sleep", "10000", "lines", "extra"}, startTemplate)
+		messages = service.Start(context.TODO())
+		recorded = []ServiceMessage{}
+	)
 
 	for message := range messages {
 		if message.Type == MessageState && message.State == StateRunning {

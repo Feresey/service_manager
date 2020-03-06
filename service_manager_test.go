@@ -148,7 +148,6 @@ func TestServiceManagerRestart(t *testing.T) {
 			if !wasStopped {
 				go m.Start("TEST")
 				wasStopped = true
-
 				continue
 			}
 		}

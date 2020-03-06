@@ -75,7 +75,8 @@ func (s *Service) Start(ctx context.Context) chan ServiceMessage {
 
 	s.cmd = execCommand(ctx, s.Command, s.Args...)
 	stdout, err := s.cmd.StdoutPipe()
-	s.channel = make(chan ServiceMessage, 3) // we should handle one error that can occur during initialization and started and running messages
+	// we should handle one error that can occur during initialization and started and running messages
+	s.channel = make(chan ServiceMessage, 3)
 	s.setStarted()
 
 	if err != nil {

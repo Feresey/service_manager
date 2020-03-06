@@ -166,7 +166,11 @@ func GetDisabledLeafsFromRoot(root string, states map[string]State, requirements
 // F B
 //  /|\
 // C D E
-func getDisabledLeafsFromRoot(root string, states map[string]State, requirements map[string][]string, results *[]string) bool {
+func getDisabledLeafsFromRoot(
+	root string,
+	states map[string]State,
+	requirements map[string][]string,
+	results *[]string) bool {
 	if states[root] == StateRunning {
 		return true
 	}

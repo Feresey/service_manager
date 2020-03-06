@@ -32,7 +32,9 @@ func TestDeduplicateOrder(t *testing.T) {
 			expected: []string{"a", "b", "c", "e"},
 		},
 	}
-	for name, tc := range testCases {
+	for name := range testCases {
+		tc := testCases[name]
+
 		t.Run(name, func(t *testing.T) {
 			input := deduplicateOrder(tc.input)
 			assert.Equal(t, tc.expected, input)
@@ -107,7 +109,9 @@ func TestInitOrder(t *testing.T) {
 			expected: []string{"a", "d", "b", "c", "s"},
 		},
 	}
-	for name, tc := range testCases {
+	for name := range testCases {
+		tc := testCases[name]
+
 		t.Run(name, func(t *testing.T) {
 			result := InitOrder(tc.init, tc.requirements)
 			assert.Equal(t, tc.expected, result)
@@ -164,7 +168,9 @@ func TestAcyclic(t *testing.T) {
 			expected: false,
 		},
 	}
-	for name, tc := range testCases {
+	for name := range testCases {
+		tc := testCases[name]
+
 		t.Run(name, func(t *testing.T) {
 			result := IsRequirementsAcyclic(tc.requirements)
 			assert.Equal(t, tc.expected, result)
@@ -205,7 +211,9 @@ func TestGetOrphanedStartedServices(t *testing.T) {
 			expected: []string{"b", "c", "d"},
 		},
 	}
-	for name, tc := range testCases {
+	for name := range testCases {
+		tc := testCases[name]
+
 		t.Run(name, func(t *testing.T) {
 			result := GetOrphanedStartedServices(tc.states, tc.requirements)
 			assert.Equal(t, tc.expected, result)
@@ -287,7 +295,9 @@ func TestGetEnabledLeafs(t *testing.T) {
 			expected:     []string{},
 		},
 	}
-	for name, tc := range testCases {
+	for name := range testCases {
+		tc := testCases[name]
+
 		t.Run(name, func(t *testing.T) {
 			result := GetEnabledLeafs(tc.states, tc.requirements)
 			assert.Equal(t, tc.expected, result)
@@ -370,7 +380,9 @@ func TestGetDisabledLeafs(t *testing.T) {
 			expected: []string{"a"},
 		},
 	}
-	for name, tc := range testCases {
+	for name := range testCases {
+		tc := testCases[name]
+
 		t.Run(name, func(t *testing.T) {
 			result := GetDisabledLeafsFromRoot(tc.root, tc.states, tc.requirements)
 			assert.Equal(t, tc.expected, result)
