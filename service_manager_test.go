@@ -143,16 +143,15 @@ func TestServiceManagerRestart(t *testing.T) {
 	for message := range messages {
 		recorded = append(recorded, message)
 
-		if message.Type == MessageState &&
-			!isStartedState(message.State) {
+		if message.Type == MessageState && !isStartedState(message.State) {
 			if !wasStopped {
 				go m.Start("TEST")
 				wasStopped = true
 				continue
 			}
-		}
 
-		go m.Close()
+			go m.Close()
+		}
 	}
 
 	assert.Equal(t, expected, recorded)
@@ -252,9 +251,8 @@ func TestServiceManagerStartWithFullfilledDependency(t *testing.T) {
 				message.State == StateRunning {
 				if atomic.LoadInt64(&aStarts) != aStarted {
 					t.Error("A started more than once!")
-
-					go m.Close()
 				}
+				go m.Close()
 			}
 		}
 	}

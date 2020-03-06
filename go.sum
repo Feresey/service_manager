@@ -1,11 +1,7 @@
-github.com/alexkohler/prealloc v0.0.0-20181002111628-4fce4887dad9 h1:31kqHz4wQqRjuSSD66Nwb8QeNxA1Fr7PL7yGtCRoMhk=
-github.com/alexkohler/prealloc v0.0.0-20181002111628-4fce4887dad9/go.mod h1:CmbNRwpsIT6OOr1myakD2xc96sG7MWgs2VePr8EjW58=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/jmhodges/copyfighter v0.0.0-20160722063546-be73a1066def h1:ETjUcgsKU6VamQH8fm9u00QaATJCzxA6iWjtwE70Lw4=
-github.com/jmhodges/copyfighter v0.0.0-20160722063546-be73a1066def/go.mod h1:fuEHlddWWx4gl+NBaIhDqhElvI1TnyomL/3MXXAA15g=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
