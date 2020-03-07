@@ -10,11 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const (
-	waitTime = 5 * time.Second
-	aStarted = 1
-)
-
 func TestServiceManagerStart(t *testing.T) {
 	defer setHelperCommand(t)()
 
@@ -180,14 +175,13 @@ func TestServiceManagerStartWithDependency(t *testing.T) {
 		switch message.Name {
 		case "A":
 			if message.Type == MessageState && message.State == StateRunning {
-				atomic.AddInt64(&aStarts, aStarted)
+				atomic.AddInt64(&aStarts, 1)
 			}
 		case "B":
 			recorded = append(recorded, message)
 
-			if message.Type == MessageState &&
-				message.State == StateStarted {
-				if atomic.LoadInt64(&aStarts) != aStarted {
+			if message.Type == MessageState && message.State == StateStarted {
+				if atomic.LoadInt64(&aStarts) != 1 {
 					t.Error("B started before A!")
 				}
 			}
@@ -240,7 +234,7 @@ func TestServiceManagerStartWithFullfilledDependency(t *testing.T) {
 		switch message.Name {
 		case "A":
 			if message.Type == MessageState && message.State == StateRunning {
-				atomic.AddInt64(&aStarts, aStarted)
+				atomic.AddInt64(&aStarts, 1)
 
 				go m.Start("B")
 			}
@@ -249,7 +243,7 @@ func TestServiceManagerStartWithFullfilledDependency(t *testing.T) {
 
 			if message.Type == MessageState &&
 				message.State == StateRunning {
-				if atomic.LoadInt64(&aStarts) != aStarted {
+				if atomic.LoadInt64(&aStarts) != 1 {
 					t.Error("A started more than once!")
 				}
 				go m.Close()
@@ -295,7 +289,7 @@ func TestServiceManagerStop(t *testing.T) {
 
 	m.Start("TEST")
 
-	ticker := time.NewTicker(waitTime)
+	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 
 loop:
@@ -330,7 +324,7 @@ func TestServiceManagerStopWithDependency(t *testing.T) {
 		m             = NewServiceManager()
 		aStarts       = int64(0)
 		aStops        = int64(0)
-		ticker        = time.NewTicker(waitTime)
+		ticker        = time.NewTicker(5 * time.Second)
 		startTemplate = regexp.MustCompile("ready")
 	)
 
@@ -359,7 +353,7 @@ loop:
 			switch message.Name {
 			case "A":
 				if message.Type == MessageState && message.State == StateRunning {
-					atomic.AddInt64(&aStarts, aStarts)
+					atomic.AddInt64(&aStarts, 1)
 				}
 
 				if message.Type == MessageState && message.State == StateFailed {
@@ -367,7 +361,7 @@ loop:
 				}
 
 				if message.Type == MessageState && message.State == StateFinished {
-					atomic.AddInt64(&aStops, aStarts)
+					atomic.AddInt64(&aStops, 1)
 				}
 			case "B":
 				if message.Type == MessageState && message.State == StateRunning {
@@ -379,8 +373,8 @@ loop:
 				}
 
 				if message.Type == MessageState && message.State == StateFinished {
-					assert.Equal(t, aStarts, atomic.LoadInt64(&aStarts), "a wasn't started or was started more than once")
-					assert.Equal(t, aStarts, atomic.LoadInt64(&aStops), "a wasn't stopped or was stopped more than once")
+					assert.Equal(t, 1, atomic.LoadInt64(&aStarts), "a wasn't started or was started more than once")
+					assert.Equal(t, 1, atomic.LoadInt64(&aStops), "a wasn't stopped or was stopped more than once")
 
 					go m.Close()
 				}

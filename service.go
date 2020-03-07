@@ -64,7 +64,6 @@ func NewService(name string, command string, args []string, runningTemplate *reg
 }
 
 func (s *Service) Start(ctx context.Context) chan ServiceMessage {
-	// Ну и нахйя ты передаешь контекст?
 	if ctx == nil {
 		ctx = context.Background()
 	}

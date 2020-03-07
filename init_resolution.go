@@ -171,7 +171,7 @@ func getDisabledLeafsFromRoot(
 	states map[string]State,
 	requirements map[string][]string,
 	results *[]string,
-	) bool {
+) bool {
 	if states[root] == StateRunning {
 		return true
 	}
