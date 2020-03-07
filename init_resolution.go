@@ -144,7 +144,7 @@ func getEnabledLeafs(root string,
 			return false
 		}
 	}
-	// ты ради этого result по ссылке передаешь?
+
 	*results = append(*results, root)
 	visited[root] = false
 
